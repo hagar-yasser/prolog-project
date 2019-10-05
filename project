@@ -42,14 +42,49 @@ helper2([[N|_]|_],N).
 helper2([[]|T],N):-helper2(T,N).
 helper2([[N1|T1]|T],N):-N1\=N,helper2([T1|T],N).
 
+trans(G,T):- transHelper2(G,[],T).
+transHelper2([[]|_],R,R).
+transHelper2([H|T],A,R):-
+    transHelper([H|T],[],[],R1,R2),append(A,[R1],A2),transHelper2(R2,A2,R).
+transHelper([],A1,A2,A1,A2).
+transHelper([[H|T]|T1],Aheads,Atails,R1,R2):-
+    append(Aheads,[H],Aheads1),append(Atails,[T],Atails1),transHelper(T1,Aheads1,Atails1,R1,R2).
+
+acceptable_distribution(G):-
+    trans(G,T),acceptable_distributionH(G,T).
+acceptable_distributionH([],[]).
+acceptable_distributionH([H|T],[H1|T1]):-
+    H\=H1,acceptable_distributionH(T,T1).
+distinct_rows([]).
+distinct_rows([H|T]) :-
+    rowsH(H,T),
+    distinct_rows(T).
+
+rowsH(_,[]).
+rowsH(H,[H1|T1]):-
+    H\=H1,
+    rowsH(H,T1).
 
 
+distinct_columns(M):- 
+    trans(M,T) , distinct_rows(T).
 
+row_col_match(M):- 
+    trans(M,T) , rowcolH(M,T), acceptable_distribution(M).
+rowcolH([],_).
+rowcolH([H|T1],T):-  member(H,T),rowcolH(T1,T).
 
+acceptable_permutation([H|T],R):-
+    permutation([H|T],R),check_acceptable([H|T],R).
+check_acceptable([],[]).
+check_acceptable([H|T],[H1|T1]):-
+    H \= H1, check_acceptable(T,T1).
 
-
-
-
-
-
-
+helsinki(N,G):- 
+    grid_build(N,G) , 
+    grid_gen(N,G) , 
+    check_num_grid(G) , 
+    acceptable_distribution(G) ,
+    distinct_rows(G) ,
+    distinct_columns(G) ,
+    row_col_match(G).
